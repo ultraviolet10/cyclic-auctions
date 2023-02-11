@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.10;
 
-import {IHeheAuctionHouse} from "./IHeheAuctionHouse.sol";
-import {INFT} from "./INFT.sol";
+import {IHeheAuctionHouse} from "./interfaces/IHeheAuctionHouse.sol";
+import {INFT} from "./interfaces/INFT.sol";
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/SafeMath.sol";
@@ -67,7 +67,7 @@ contract HeheAuctionHouse is
             _auctions[_auctionId].startTime == 0 ||
             _auctions[_auctionId].settled
         ) {
-            startNewAuction(2 minutes);
+            startNewAuction(4 minutes);
         }
     }
 
@@ -167,7 +167,7 @@ contract HeheAuctionHouse is
 
     function settleCurrentAndCreateNewAuction() external nonReentrant {
         settleAuction(currentTokenId);
-        startNewAuction(2 minutes);
+        startNewAuction(4 minutes);
     }
 
     function onERC721Received(
