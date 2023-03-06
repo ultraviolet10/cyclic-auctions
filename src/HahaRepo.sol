@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0 <0.9.0;
+pragma solidity 0.8.19;
 
 import "./IHahaRepo.sol";
 
@@ -21,10 +21,10 @@ contract HahaRepo is IHahaRepo {
         hahas.push(Haha(q, a));
     }
 
-    function batchStoreHahas(
-        string[] memory questions,
-        string[] memory answers
-    ) public onlyOwner {
+    function batchStoreHahas(string[] memory questions, string[] memory answers)
+        public
+        onlyOwner
+    {
         require(
             questions.length == answers.length,
             "No matches, we need full jokes."
