@@ -21,9 +21,11 @@ library NFTSVG {
         string color1;
     }
 
-    function generateSVG(
-        SVGParams memory params
-    ) internal pure returns (string memory svg) {
+    function generateSVG(SVGParams memory params)
+        internal
+        pure
+        returns (string memory svg)
+    {
         return
             string(
                 abi.encodePacked(
@@ -34,9 +36,11 @@ library NFTSVG {
             );
     }
 
-    function generateSVGDefs(
-        SVGParams memory params
-    ) private pure returns (string memory svg) {
+    function generateSVGDefs(SVGParams memory params)
+        private
+        pure
+        returns (string memory svg)
+    {
         svg = string(
             abi.encodePacked(
                 '<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">',
@@ -49,9 +53,11 @@ library NFTSVG {
         );
     }
 
-    function generateSVGColorPartOne(
-        SVGParams memory params
-    ) private pure returns (string memory svg) {
+    function generateSVGColorPartOne(SVGParams memory params)
+        private
+        pure
+        returns (string memory svg)
+    {
         string memory values0 = string(
             abi.encodePacked("#", params.color0, "; #", params.color1)
         );
@@ -73,9 +79,11 @@ library NFTSVG {
         );
     }
 
-    function generateSVGColorPartTwo(
-        SVGParams memory params
-    ) private pure returns (string memory svg) {
+    function generateSVGColorPartTwo(SVGParams memory params)
+        private
+        pure
+        returns (string memory svg)
+    {
         string memory values0 = string(
             abi.encodePacked("#", params.color0, "; #", params.color1)
         );
@@ -97,9 +105,11 @@ library NFTSVG {
         );
     }
 
-    function generateSVGText(
-        SVGParams memory params
-    ) private pure returns (string memory svg) {
+    function generateSVGText(SVGParams memory params)
+        private
+        pure
+        returns (string memory svg)
+    {
         svg = string(
             abi.encodePacked(
                 '<g fill="black" font-family="Verdana" font-size="17"><text x="30" y="60" >HeheToken #',
@@ -113,9 +123,11 @@ library NFTSVG {
         );
     }
 
-    function generateSVGFigures(
-        SVGParams memory params
-    ) private pure returns (string memory svg) {
+    function generateSVGFigures(SVGParams memory params)
+        private
+        pure
+        returns (string memory svg)
+    {
         svg = string(
             abi.encodePacked(
                 '<rect id="r" x="0" y="0" rx="15" ry="15" width="100%" height="100%" fill="url(#g1)" />',
