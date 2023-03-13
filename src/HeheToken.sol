@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "./libraries/NFTDescriptor.sol";
-import "./../HeheAuction/interfaces/IHahaRepo.sol";
+import "./libs/NFTDescriptor.sol";
+import "./interfaces/IHahaRepo.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/SafeMath.sol";
@@ -15,10 +15,10 @@ contract HeheToken is ERC721URIStorage, Ownable {
 
     using SafeMath for uint256;
 
-    uint256 public tokenCounter;
-    IHahaRepo public hahaRepo;
+    uint8 public tokenCounter; // make private?
+    IHahaRepo public hahaRepo; // make private
 
-    event CreatedHeheToken(uint256 indexed tokenId);
+    event CreatedHeheToken(uint8 indexed tokenId);
 
     constructor(
         string memory _name,
@@ -29,7 +29,7 @@ contract HeheToken is ERC721URIStorage, Ownable {
         tokenCounter = 0;
     }
 
-    function createHehe(address to) public returns (uint256) {
+    function createHehe(address to) public returns (uint8) {
         IHahaRepo.Haha memory haha = hahaRepo.getHaha(tokenCounter);
         uint256 currentId = tokenCounter;
         super._safeMint(to, tokenCounter);

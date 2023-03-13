@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.17;
 
 import {IHeheAuctionHouse} from "./interfaces/IHeheAuctionHouse.sol";
 import {INFT} from "./interfaces/INFT.sol";
@@ -21,10 +21,11 @@ contract HeheAuctionHouse is
 
     address payable private contractOwner;
     INFT public hehe;
-    uint256 currentTokenId;
+    uint8 public minBidIncrementPercentage;
+    uint8 public currentTokenId;
 
     struct Auction {
-        uint256 tokenId;
+        uint8 tokenId;
         uint256 startTime;
         uint256 endTime;
         uint256 bidAmount;
@@ -33,7 +34,7 @@ contract HeheAuctionHouse is
     }
 
     address payable artist =
-        payable(0xF9AB0CC40324d0565111846beeb11BCC676D6eaC);
+        payable(contractOwner);
 
     mapping(uint256 => Auction) public _auctions;
 
@@ -49,9 +50,10 @@ contract HeheAuctionHouse is
         uint256 amount
     );
 
-    constructor(INFT _hehe) {
+    constructor(INFT _hehe, uint8 _minBidIncrementPercentage) {
         contractOwner = payable(msg.sender);
         hehe = _hehe;
+        minBidIncrementPercentage = _minBidIncrementPercentage;
 
         _pause();
     }
@@ -67,7 +69,7 @@ contract HeheAuctionHouse is
             _auctions[_auctionId].startTime == 0 ||
             _auctions[_auctionId].settled
         ) {
-            startNewAuction(4 minutes);
+            startNewAuction(15 minutes);
         }
     }
 
@@ -81,25 +83,25 @@ contract HeheAuctionHouse is
 
     function startNewAuction(uint256 _duration) internal {
         // require((msg.sender == owner || ownerOf(_tokenId) == msg.sender), "Only owners.");
-        // require(_auctions[_tokenId].startTime == 0, "Auction for given token ID already in progress.");
+        require(_auctions[currentTokenId].startTime == 0, "Auction for given token ID already in progress.");
 
         // mint a new token and store it in the contract
 
-        try hehe.createHehe(address(this)) returns (uint256 tokenCounter) {
+        try hehe.createHehe(address(this)) returns (uint8 _newTokenId) {
             uint256 _startTime = block.timestamp;
             uint256 _endTime = block.timestamp + _duration;
 
-            currentTokenId = tokenCounter;
+            currentTokenId = _newTokenId;
 
-            _auctions[tokenCounter] = Auction({
-                tokenId: tokenCounter,
+            _auctions[_newTokenId] = Auction({
+                tokenId: _newTokenId,
                 startTime: _startTime,
                 endTime: _endTime,
                 bidAmount: 0,
                 bidder: payable(0),
                 settled: false
             });
-            emit AuctionCreated(tokenCounter, _startTime, _endTime);
+            emit AuctionCreated(_newTokenId, _startTime, _endTime);
         } catch Error(string memory) {
             _pause();
         }
@@ -113,6 +115,10 @@ contract HeheAuctionHouse is
         require(
             msg.value > _auctions[_tokenId].bidAmount,
             "Bid amount too higher than the existing bid."
+        );
+        require(
+            msg.value >= _auctions[_tokenId].bidAmount + ((_auctions[_tokenId].bidAmount * minBidIncrementPercentage) / 100),
+            'Must send more than last bid by minBidIncrementPercentage amount'
         );
 
         if (_auctions[_tokenId].bidAmount > 0) {
@@ -167,7 +173,7 @@ contract HeheAuctionHouse is
 
     function settleCurrentAndCreateNewAuction() external nonReentrant {
         settleAuction(currentTokenId);
-        startNewAuction(4 minutes);
+        startNewAuction(15 minutes);
     }
 
     function onERC721Received(
