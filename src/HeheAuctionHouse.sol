@@ -33,8 +33,7 @@ contract HeheAuctionHouse is
         bool settled;
     }
 
-    address payable artist =
-        payable(contractOwner);
+    address payable private artist = payable(contractOwner);
 
     mapping(uint256 => Auction) public _auctions;
 
@@ -69,7 +68,7 @@ contract HeheAuctionHouse is
             _auctions[_auctionId].startTime == 0 ||
             _auctions[_auctionId].settled
         ) {
-            startNewAuction(15 minutes);
+            startNewAuction(3 minutes);
         }
     }
 
@@ -82,11 +81,7 @@ contract HeheAuctionHouse is
     }
 
     function startNewAuction(uint256 _duration) internal {
-        // require((msg.sender == owner || ownerOf(_tokenId) == msg.sender), "Only owners.");
-        require(_auctions[currentTokenId].startTime == 0, "Auction for given token ID already in progress.");
-
         // mint a new token and store it in the contract
-
         try hehe.createHehe(address(this)) returns (uint8 _newTokenId) {
             uint256 _startTime = block.timestamp;
             uint256 _endTime = block.timestamp + _duration;
@@ -101,36 +96,41 @@ contract HeheAuctionHouse is
                 bidder: payable(0),
                 settled: false
             });
+
             emit AuctionCreated(_newTokenId, _startTime, _endTime);
         } catch Error(string memory) {
             _pause();
         }
     }
 
-    function bid(uint256 _tokenId) external payable nonReentrant {
+    function bid(uint8 _tokenId) external payable nonReentrant {
         require(
             _auctions[_tokenId].endTime > _auctions[_tokenId].startTime,
             "Auction is not active any longer."
         );
         require(
             msg.value > _auctions[_tokenId].bidAmount,
-            "Bid amount too higher than the existing bid."
+            "Bid amount not high enough."
         );
         require(
-            msg.value >= _auctions[_tokenId].bidAmount + ((_auctions[_tokenId].bidAmount * minBidIncrementPercentage) / 100),
-            'Must send more than last bid by minBidIncrementPercentage amount'
+            msg.value >=
+                _auctions[_tokenId].bidAmount +
+                    ((_auctions[_tokenId].bidAmount *
+                        minBidIncrementPercentage) / 100),
+            "Must send more than last bid by minBidIncrementPercentage amount"
         );
+
+        _auctions[_tokenId].bidAmount = msg.value;
+        _auctions[_tokenId].bidder = payable(msg.sender);
 
         if (_auctions[_tokenId].bidAmount > 0) {
             _auctions[_tokenId].bidder.transfer(_auctions[_tokenId].bidAmount);
         }
-        _auctions[_tokenId].bidAmount = msg.value;
-        _auctions[_tokenId].bidder = payable(msg.sender);
 
         emit AuctionBid(_tokenId, msg.sender, msg.value);
     }
 
-    function settleAuction(uint256 _tokenId) internal {
+    function settleAuction(uint8 _tokenId) internal {
         require(_auctions[_tokenId].startTime != 0, "Auction hasn't begun");
         require(
             _auctions[_tokenId].settled != true,
@@ -143,9 +143,7 @@ contract HeheAuctionHouse is
 
         hehe.approve(msg.sender, _tokenId);
 
-        if (_auctions[_tokenId].bidder == address(0)) {
-            _auctions[_tokenId].settled = true;
-        } else {
+        if (_auctions[_tokenId].bidder != address(0)) {
             hehe.transferFrom(
                 address(this),
                 _auctions[_tokenId].bidder,
@@ -160,6 +158,7 @@ contract HeheAuctionHouse is
         _auctions[_tokenId].settled = true;
 
         uint256 amount = address(this).balance;
+
         if (amount > 0) {
             artist.transfer(amount);
         }
@@ -173,7 +172,7 @@ contract HeheAuctionHouse is
 
     function settleCurrentAndCreateNewAuction() external nonReentrant {
         settleAuction(currentTokenId);
-        startNewAuction(15 minutes);
+        startNewAuction(3 minutes);
     }
 
     function onERC721Received(

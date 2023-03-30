@@ -16,7 +16,7 @@ contract HeheToken is ERC721URIStorage, Ownable {
     using SafeMath for uint256;
 
     uint8 public tokenCounter; // make private?
-    IHahaRepo public hahaRepo; // make private
+    IHahaRepo private hahaRepo; // make private
 
     event CreatedHeheToken(uint8 indexed tokenId);
 
@@ -29,10 +29,10 @@ contract HeheToken is ERC721URIStorage, Ownable {
         tokenCounter = 0;
     }
 
-    function createHehe(address to) public returns (uint8) {
+    function createHehe(address to) external returns (uint8) {
         IHahaRepo.Haha memory haha = hahaRepo.getHaha(tokenCounter);
-        uint256 currentId = tokenCounter;
-        super._safeMint(to, tokenCounter);
+        uint8 currentId = tokenCounter;
+        super._safeMint(to, currentId);
         string memory uri = NFTDescriptor.constructTokenURI(
             NFTDescriptor.URIParams({
                 tokenId: tokenCounter,
@@ -46,6 +46,6 @@ contract HeheToken is ERC721URIStorage, Ownable {
         emit CreatedHeheToken(tokenCounter);
         tokenCounter = tokenCounter + 1;
 
-        return (tokenCounter - 1);
+        return (currentId);
     }
 }
