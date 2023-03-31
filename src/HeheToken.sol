@@ -13,9 +13,11 @@ contract HeheToken is ERC721URIStorage, Ownable {
         string answer;
     }
 
+    uint8 public MINT_LIMIT = 50;
+
     using SafeMath for uint256;
 
-    uint8 public tokenCounter; // make private?
+    uint8 public currentHeheId; // make private
     IHahaRepo private hahaRepo; // make private
 
     event CreatedHeheToken(uint8 indexed tokenId);
@@ -26,16 +28,21 @@ contract HeheToken is ERC721URIStorage, Ownable {
         IHahaRepo _hahaRepo
     ) ERC721(_name, _symbol) {
         hahaRepo = _hahaRepo;
-        tokenCounter = 0;
+        currentHeheId = 0;
     }
 
     function createHehe(address to) external returns (uint8) {
-        IHahaRepo.Haha memory haha = hahaRepo.getHaha(tokenCounter);
-        uint8 currentId = tokenCounter;
+        if (currentHeheId > MINT_LIMIT) revert MintLimitExceeded();
+
+        // get Haha from repo
+        IHahaRepo.Haha memory haha = hahaRepo.getHaha(currentHeheId);
+
+        // store current token ID in new var
+        uint8 currentId = currentHeheId;
         super._safeMint(to, currentId);
         string memory uri = NFTDescriptor.constructTokenURI(
             NFTDescriptor.URIParams({
-                tokenId: tokenCounter,
+                tokenId: currentHeheId,
                 blockNumber: block.number,
                 tokenOwner: msg.sender,
                 punchline: haha.question,
@@ -43,8 +50,8 @@ contract HeheToken is ERC721URIStorage, Ownable {
             })
         );
         _setTokenURI(currentId, uri);
-        emit CreatedHeheToken(tokenCounter);
-        tokenCounter = tokenCounter + 1;
+        emit CreatedHeheToken(currentHeheId);
+        currentHeheId++;
 
         return (currentId);
     }

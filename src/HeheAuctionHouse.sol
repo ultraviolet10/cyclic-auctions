@@ -42,7 +42,9 @@ contract HeheAuctionHouse is
         uint256 startTime,
         uint256 endTime
     );
+
     event AuctionBid(uint256 indexed heheId, address sender, uint256 value);
+
     event AuctionSettled(
         uint256 indexed heheId,
         address winner,
@@ -120,12 +122,16 @@ contract HeheAuctionHouse is
             "Must send more than last bid by minBidIncrementPercentage amount"
         );
 
-        _auctions[_tokenId].bidAmount = msg.value;
-        _auctions[_tokenId].bidder = payable(msg.sender);
-
-        if (_auctions[_tokenId].bidAmount > 0) {
+        // send back tokens to previous bidder
+        if (
+            _auctions[_tokenId].bidAmount > 0 &&
+            address(this).balance >= _auctions[_tokenId].bidAmount
+        ) {
             _auctions[_tokenId].bidder.transfer(_auctions[_tokenId].bidAmount);
         }
+
+        _auctions[_tokenId].bidAmount = msg.value;
+        _auctions[_tokenId].bidder = payable(msg.sender);
 
         emit AuctionBid(_tokenId, msg.sender, msg.value);
     }
@@ -140,6 +146,10 @@ contract HeheAuctionHouse is
             _auctions[_tokenId].endTime <= block.timestamp,
             "Auction hasn't completed."
         );
+        require(
+            _auctions[_tokenId].bidder == msg.sender,
+            "Wrong bidder asking for the Hehe"
+        );
 
         hehe.approve(msg.sender, _tokenId);
 
@@ -151,17 +161,14 @@ contract HeheAuctionHouse is
             );
         }
 
-        if (_auctions[_tokenId].bidAmount > 0) {
+        if (
+            _auctions[_tokenId].bidAmount > 0 &&
+            address(this).balance >= _auctions[_tokenId].bidAmount
+        ) {
             contractOwner.transfer(_auctions[_tokenId].bidAmount);
         }
 
         _auctions[_tokenId].settled = true;
-
-        uint256 amount = address(this).balance;
-
-        if (amount > 0) {
-            artist.transfer(amount);
-        }
 
         emit AuctionSettled(
             _tokenId,
